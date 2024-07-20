@@ -2,22 +2,28 @@ import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import Link from "next/link";
 import {
+  Bell,
   Home,
   LineChart,
   Package,
   Package2,
-  Settings,
-  ShoppingCart,
-  Users2,
+  PanelLeft,
+  Tag,
+  Users,
 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/toaster";
 import Providers from "@/lib/providers";
+import { Button } from "@/components/ui/button";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ModeToggle } from "@/components/modeToggle";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -35,107 +41,159 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={GeistSans.className}>
+    <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-white">
-        <main className="min-h-screen flex flex-col justify-center items-center">
-          <Providers>
-            <div className="flex min-h-screen w-full flex-col bg-muted/40">
-              <TooltipProvider>
-                <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
-                  <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
-                    <Link
-                      href="#"
-                      className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
-                    >
-                      <Package2 className="h-4 w-4 transition-all group-hover:scale-110" />
-                      <span className="sr-only">Acme Inc</span>
-                    </Link>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <main className="min-h-screen flex flex-col justify-center items-center dark:bg-slate-950 dark:border-slate-950">
+            <Providers>
+              <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+                <div className="hidden border-r bg-muted/40 md:block">
+                  <div className="flex h-full max-h-screen flex-col gap-2">
+                    <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+                      <Link
+                        href="/"
+                        className="flex items-center gap-2 font-semibold"
+                      >
+                        <Package2 className="h-6 w-6" />
+                        <span className="">Aurea Inc</span>
+                      </Link>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="ml-auto h-8 w-8"
+                      >
+                        <Bell className="h-4 w-4" />
+                        <span className="sr-only">Toggle notifications</span>
+                      </Button>
+                    </div>
+                    <div className="flex-1">
+                      <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
                         <Link
-                          href="/business-figures"
-                          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                          href="/"
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                         >
-                          <Home className="h-5 w-5" />
-                          <span className="sr-only">Dashboard</span>
+                          <Home className="h-4 w-4" />
+                          Dashboard
                         </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">Dashboard</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
                         <Link
-                          href="#"
-                          className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                          href="/products"
+                          className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
                         >
-                          <ShoppingCart className="h-5 w-5" />
-                          <span className="sr-only">Orders</span>
+                          <Package className="h-4 w-4" />
+                          Products{" "}
                         </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">Orders</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
                         <Link
-                          href="#"
-                          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                          href="/tags"
+                          className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
                         >
-                          <Package className="h-5 w-5" />
-                          <span className="sr-only">Products</span>
+                          <Tag className="h-4 w-4" />
+                          Tags
                         </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">Products</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href="#"
-                          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-                        >
-                          <Users2 className="h-5 w-5" />
-                          <span className="sr-only">Customers</span>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">Customers</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
                         <Link
                           href="#"
-                          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                         >
-                          <LineChart className="h-5 w-5" />
-                          <span className="sr-only">Analytics</span>
+                          <Users className="h-4 w-4" />
+                          Customers
                         </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">Analytics</TooltipContent>
-                    </Tooltip>
-                  </nav>
-                  <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
                         <Link
                           href="#"
-                          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                         >
-                          <Settings className="h-5 w-5" />
-                          <span className="sr-only">Settings</span>
+                          <LineChart className="h-4 w-4" />
+                          Sales
                         </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">Settings</TooltipContent>
-                    </Tooltip>
-                  </nav>
-                </aside>
-              </TooltipProvider>
-              <div className="flex min-h-screen w-full flex-col bg-muted/40">
-                <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-                  {children}
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex min-h-screen w-full flex-col">
+                  <header className="sticky bg-white dark:bg-slate-950 top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="lg:hidden"
+                        >
+                          <PanelLeft className="h-5 w-5" />
+                          <span className="sr-only">Toggle Menu</span>
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="left" className="sm:max-w-xs">
+                        <nav className="grid gap-6 text-lg font-medium">
+                          <Link
+                            href="#"
+                            className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+                          >
+                            <Package2 className="h-5 w-5 transition-all group-hover:scale-110" />
+                            <span className="sr-only">Acme Inc</span>
+                          </Link>
+                          <Link
+                            href="/"
+                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                          >
+                            <Home className="h-5 w-5" />
+                            Dashboard
+                          </Link>
+                          <Link
+                            href="/products"
+                            className="flex items-center gap-4 px-2.5 text-foreground"
+                          >
+                            <Package className="h-5 w-5" />
+                            Products
+                          </Link>
+                          <Link
+                            href="/tags"
+                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                          >
+                            <Tag className="h-5 w-5" />
+                            Tags
+                          </Link>
+                          <Link
+                            href="#"
+                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                          >
+                            <LineChart className="h-5 w-5" />
+                            Settings
+                          </Link>
+                        </nav>
+                      </SheetContent>
+                    </Sheet>
+                    <Breadcrumb className="hidden md:flex">
+                      <BreadcrumbList>
+                        <BreadcrumbItem>
+                          <BreadcrumbLink asChild>
+                            <Link href="#">Dashboard</Link>
+                          </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          <BreadcrumbLink asChild>
+                            <Link href="#">Products</Link>
+                          </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          <BreadcrumbPage>All Products</BreadcrumbPage>
+                        </BreadcrumbItem>
+                      </BreadcrumbList>
+                    </Breadcrumb>
+                    <ModeToggle />
+                  </header>
+                  <div className="flex flex-col sm:gap-4 sm:py-4">
+                    {children}
+                  </div>
                 </div>
               </div>
-              <Toaster />
-            </div>
-          </Providers>
-        </main>
+            </Providers>
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );

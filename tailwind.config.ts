@@ -18,6 +18,9 @@ const config = {
       },
     },
     extend: {
+      colors: {
+        error: "hsl(var(--error))"
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
