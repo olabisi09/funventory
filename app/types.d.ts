@@ -60,3 +60,7 @@ interface Sales extends BaseInterface {
   qty_sold: number;
   sale_date: string;
 }
+
+interface Whatever extends BaseInterface {
+  whatever: any;
+}
