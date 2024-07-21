@@ -6,6 +6,7 @@ export const tables = {
   products: "products",
   tags: "categories",
   profitView: "product_profit_view",
+  sales: "sales",
 }
 
 export const getFileFromSupabase = (fileName: string) => {
@@ -43,9 +44,9 @@ export const downloadFileFromSupabase = (fileName: string) => {
 }
 
 export const addProduct = async (payload: Payload) => {
-  const filePath = await saveFileToDb(payload.body.productImg, payload.body.productName);
+  const filePath = await saveFileToDb(payload.body.product_img, payload.body.product_name);
   if (filePath) {
-    payload.body.productImg = filePath;
+    payload.body.product_img = filePath;
   }
   else throw new Error('Failed to upload image');
   return await addData(payload);

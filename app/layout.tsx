@@ -7,7 +7,6 @@ import {
   LineChart,
   Package,
   Package2,
-  PanelLeft,
   Tag,
   Users,
 } from "lucide-react";
@@ -21,9 +20,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/modeToggle";
+import MobileNav from "@/components/mobileNav";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -95,14 +94,7 @@ export default function RootLayout({
                           Tags
                         </Link>
                         <Link
-                          href="#"
-                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                        >
-                          <Users className="h-4 w-4" />
-                          Customers
-                        </Link>
-                        <Link
-                          href="#"
+                          href="/sales"
                           className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                         >
                           <LineChart className="h-4 w-4" />
@@ -114,57 +106,7 @@ export default function RootLayout({
                 </div>
                 <div className="flex min-h-screen w-full flex-col">
                   <header className="sticky bg-white dark:bg-slate-950 top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-                    <Sheet>
-                      <SheetTrigger asChild>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="lg:hidden"
-                        >
-                          <PanelLeft className="h-5 w-5" />
-                          <span className="sr-only">Toggle Menu</span>
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent side="left" className="sm:max-w-xs">
-                        <nav className="grid gap-6 text-lg font-medium">
-                          <Link
-                            href="#"
-                            className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
-                          >
-                            <Package2 className="h-5 w-5 transition-all group-hover:scale-110" />
-                            <span className="sr-only">Acme Inc</span>
-                          </Link>
-                          <Link
-                            href="/"
-                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                          >
-                            <Home className="h-5 w-5" />
-                            Dashboard
-                          </Link>
-                          <Link
-                            href="/products"
-                            className="flex items-center gap-4 px-2.5 text-foreground"
-                          >
-                            <Package className="h-5 w-5" />
-                            Products
-                          </Link>
-                          <Link
-                            href="/tags"
-                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                          >
-                            <Tag className="h-5 w-5" />
-                            Tags
-                          </Link>
-                          <Link
-                            href="#"
-                            className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                          >
-                            <LineChart className="h-5 w-5" />
-                            Settings
-                          </Link>
-                        </nav>
-                      </SheetContent>
-                    </Sheet>
+                    <MobileNav />
                     <Breadcrumb className="hidden md:flex">
                       <BreadcrumbList>
                         <BreadcrumbItem>

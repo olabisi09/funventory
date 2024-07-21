@@ -5,6 +5,6 @@ export const isInStock = (qty: number): string => {
     case 3:
       return "Low in stock";
     default:
-      return "In stock";
+      return `${qty} in stock`;
   }
 }

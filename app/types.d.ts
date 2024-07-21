@@ -26,21 +26,21 @@ interface Delete {
 }
 
 interface Product extends BaseInterface {
-  productName: string;
-  productDescription?: string;
-  productImg?: string;
-  categoryId?: number;
-  costPrice: number;
-  packagingCost: number;
-  transportationCost: number;
-  otherCosts?: number;
-  stockQty: number;
-  sellingPrice: number;
+  product_name: string;
+  product_description?: string;
+  product_img?: string;
+  category_id?: number;
+  cost_price: number;
+  packaging_cost: number;
+  transportation_cost: number;
+  other_costs?: number;
+  stock_qty: number;
+  selling_price: number;
 }
 
 interface Category extends BaseInterface {
-  categoryName: string;
-  categoryDescription?: string;
+  category_name: string;
+  category_description?: string;
 }
 
 interface ProfitView {
@@ -53,4 +53,10 @@ interface ProfitView {
   sellingPrice: number;
   totalcost: number;
   profitperitem: number;
+}
+
+interface Sales extends BaseInterface {
+  product_id: number;
+  qty_sold: number;
+  sale_date: string;
 }
