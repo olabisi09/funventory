@@ -68,8 +68,8 @@ export default function Tags() {
       const payload: Payload = {
         tableName: tables.tags,
         body: {
-          categoryName: values.categoryName,
-          categoryDescription: values.categoryDescription,
+          category_name: values.categoryName,
+          category_description: values.categoryDescription,
         },
       };
 
@@ -250,9 +250,9 @@ export default function Tags() {
                     {tags?.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">
-                          {item.categoryName}
+                          {item.category_name}
                         </TableCell>
-                        <TableCell>{item.categoryDescription}</TableCell>
+                        <TableCell>{item.category_description}</TableCell>
                         <TableCell className="hidden md:table-cell">
                           {item.created_at}
                         </TableCell>

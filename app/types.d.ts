@@ -45,14 +45,14 @@ interface Category extends BaseInterface {
 
 interface ProfitView {
   id: number;
-  productName: string;
-  costPrice: number;
-  packagingCost: number;
-  transportationCost: number;
-  otherCosts?: number;
-  sellingPrice: number;
-  totalcost: number;
-  profitperitem: number;
+  product_name: string;
+  cost_price: number;
+  packaging_cost: number;
+  transportation_cost: number;
+  other_costs?: number;
+  selling_price: number;
+  total_cost: number;
+  profit_per_item: number;
 }
 
 interface Sales extends BaseInterface {

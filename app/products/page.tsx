@@ -81,16 +81,16 @@ export default function Products() {
       const payload: Payload = {
         tableName: "products",
         body: {
-          productName: values.productName,
-          productDescription: values.productDescription,
-          productImg: values.picture,
-          categoryId: values.category,
-          costPrice: values.costPrice,
-          packagingCost: values.packaging,
-          transportationCost: values.transport,
-          otherCosts: values.otherCosts,
-          stockQty: values.stockQty,
-          sellingPrice: values.sellingPrice,
+          product_name: values.productName,
+          product_description: values.productDescription,
+          product_img: values.picture,
+          category_id: values.category,
+          cost_price: values.costPrice,
+          packaging_cost: values.packaging,
+          transportation_cost: values.transport,
+          other_costs: values.otherCosts,
+          stock_qty: values.stockQty,
+          selling_price: values.sellingPrice,
         },
       };
 
