@@ -43,7 +43,7 @@ const FormInput: React.FC<InputProps> = (props) => {
       </Field>
       {name && (
         <ErrorMessage name={name}>
-          {(msg) => <small className="bg-error">{msg}</small>}
+          {(msg) => <small className="text-error">{msg}</small>}
         </ErrorMessage>
       )}
     </div>

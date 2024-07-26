@@ -23,6 +23,7 @@ import {
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/modeToggle";
 import MobileNav from "@/components/mobileNav";
+import { Toaster } from "@/components/ui/toaster";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -135,6 +136,7 @@ export default function RootLayout({
               </div>
             </Providers>
           </main>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

@@ -1,3 +1,4 @@
+import { handleSupabaseError } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
 
 const projectId = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -55,7 +56,12 @@ export const addProduct = async (payload: Payload) => {
 export const fetchData = async (tableName: string) => await supabase.from(tableName).select()
 
 export const addData = async (payload: Payload) => {
-  await supabase.from(payload.tableName).insert(payload.body);
+  const { data, error } = await supabase.from(payload.tableName).insert(payload.body);
+
+  if (error) {
+    handleSupabaseError(error)
+  }
+  return data;
 }
 
 export const deleteData = async (payload: Delete) => {

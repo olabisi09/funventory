@@ -1,3 +1,5 @@
+import { PostgrestError } from "@supabase/supabase-js";
+
 export const isInStock = (qty: number): string => {
   switch (qty) {
     case 0:
@@ -7,4 +9,8 @@ export const isInStock = (qty: number): string => {
     default:
       return `${qty} in stock`;
   }
+}
+
+export const handleSupabaseError = (error: PostgrestError) => {
+  throw new Error(`${error.message}`);
 }
