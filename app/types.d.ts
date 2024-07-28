@@ -19,6 +19,11 @@ interface Payload {
   body: any;
 }
 
+interface Update extends Payload {
+  where: string;
+  equals: string | number;
+}
+
 interface Delete {
   tableName: string;
   id: number;
@@ -59,8 +64,4 @@ interface Sales extends BaseInterface {
   product_id: number;
   qty_sold: number;
   sale_date: string;
-}
-
-interface Whatever extends BaseInterface {
-  whatever: any;
 }

@@ -64,10 +64,28 @@ export const addData = async (payload: Payload) => {
   return data;
 }
 
+export const updateData = async (payload: Update) => {
+  const { data, error } = await supabase.from(payload.tableName).update(payload.body).eq(payload.where, payload.equals);
+
+  if (error) {
+    handleSupabaseError(error)
+  }
+  return data;
+}
+
 export const deleteData = async (payload: Delete) => {
   if (payload.file) {
     await deleteFileFromDb(payload.file)
   }
   const { data, error } = await supabase.from(payload.tableName).delete().eq('id', payload.id);
   return { data, error };
+}
+
+export const getTotalRevenue = async () => {
+  const { data, error } = await supabase.rpc('get_dashboard');
+
+  if (error) {
+    handleSupabaseError(error)
+  }
+  return data;
 }

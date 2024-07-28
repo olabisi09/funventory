@@ -1,3 +1,4 @@
+"use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import {
   CardContent,
   CardDescription,
 } from "@/components/ui/card";
+import { Spin } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -16,6 +18,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
+import { getTotalRevenue } from "@/lib/requests";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   ArrowUpRight,
@@ -25,7 +30,34 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default async function Index() {
+export default function Index() {
+  const { toast } = useToast();
+
+  const { data, error, isLoading, isError } = useQuery({
+    queryKey: ["get-dashboard-data"],
+    queryFn: getTotalRevenue,
+    //staleTime: 60 * 1000, // 1 minute
+    //refetchInterval: 60 * 1000, // 1 minute
+  });
+
+  if (isLoading) {
+    return (
+      <main className="grid justify-center items-center">
+        <Spin />
+      </main>
+    );
+  }
+
+  if (isError) {
+    toast({
+      title: "Error",
+      description: error?.message,
+      variant: "destructive",
+    });
+  }
+
+  const { total_revenue, total_sales } = data;
+
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -35,13 +67,13 @@ export default async function Index() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold">&#8358;{total_revenue}</div>
+            {/* <p className="text-xs text-muted-foreground">
               +20.1% from last month
-            </p>
+            </p> */}
           </CardContent>
         </Card>
-        <Card x-chunk="dashboard-01-chunk-1">
+        {/* <Card x-chunk="dashboard-01-chunk-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Subscriptions</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -52,20 +84,20 @@ export default async function Index() {
               +180.1% from last month
             </p>
           </CardContent>
-        </Card>
+        </Card> */}
         <Card x-chunk="dashboard-01-chunk-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Sales</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+12,234</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold">+{total_sales}</div>
+            {/* <p className="text-xs text-muted-foreground">
               +19% from last month
-            </p>
+            </p> */}
           </CardContent>
         </Card>
-        <Card x-chunk="dashboard-01-chunk-3">
+        {/* <Card x-chunk="dashboard-01-chunk-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Now</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
@@ -76,9 +108,9 @@ export default async function Index() {
               +201 since last hour
             </p>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
-      <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
+      {/* <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
         <Card className="xl:col-span-2" x-chunk="dashboard-01-chunk-4">
           <CardHeader className="flex flex-row items-center">
             <div className="grid gap-2">
@@ -124,7 +156,7 @@ export default async function Index() {
                   <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
                     2023-06-23
                   </TableCell>
-                  <TableCell className="text-right">$250.00</TableCell>
+                  <TableCell className="text-right">&#8358;250.00</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
@@ -144,7 +176,7 @@ export default async function Index() {
                   <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
                     2023-06-24
                   </TableCell>
-                  <TableCell className="text-right">$150.00</TableCell>
+                  <TableCell className="text-right">&#8358;150.00</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
@@ -164,7 +196,7 @@ export default async function Index() {
                   <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
                     2023-06-25
                   </TableCell>
-                  <TableCell className="text-right">$350.00</TableCell>
+                  <TableCell className="text-right">&#8358;350.00</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
@@ -182,7 +214,7 @@ export default async function Index() {
                   <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
                     2023-06-26
                   </TableCell>
-                  <TableCell className="text-right">$450.00</TableCell>
+                  <TableCell className="text-right">&#8358;450.00</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
@@ -200,7 +232,7 @@ export default async function Index() {
                   <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
                     2023-06-27
                   </TableCell>
-                  <TableCell className="text-right">$550.00</TableCell>
+                  <TableCell className="text-right">&#8358;550.00</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -224,7 +256,7 @@ export default async function Index() {
                   olivia.martin@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+$1,999.00</div>
+              <div className="ml-auto font-medium">+&#8358;1,999.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -237,7 +269,7 @@ export default async function Index() {
                   jackson.lee@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+$39.00</div>
+              <div className="ml-auto font-medium">+&#8358;39.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -252,7 +284,7 @@ export default async function Index() {
                   isabella.nguyen@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+$299.00</div>
+              <div className="ml-auto font-medium">+&#8358;299.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -263,7 +295,7 @@ export default async function Index() {
                 <p className="text-sm font-medium leading-none">William Kim</p>
                 <p className="text-sm text-muted-foreground">will@email.com</p>
               </div>
-              <div className="ml-auto font-medium">+$99.00</div>
+              <div className="ml-auto font-medium">+&#8358;99.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -276,11 +308,11 @@ export default async function Index() {
                   sofia.davis@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+$39.00</div>
+              <div className="ml-auto font-medium">+&#8358;39.00</div>
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
     </main>
   );
 }

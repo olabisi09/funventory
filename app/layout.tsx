@@ -1,29 +1,14 @@
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import Link from "next/link";
-import {
-  Bell,
-  Home,
-  LineChart,
-  Package,
-  Package2,
-  Tag,
-  Users,
-} from "lucide-react";
+import { Bell, Home, LineChart, Package, Package2, Tag } from "lucide-react";
 import Providers from "@/lib/providers";
 import { Button } from "@/components/ui/button";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/modeToggle";
 import MobileNav from "@/components/mobileNav";
 import { Toaster } from "@/components/ui/toaster";
+import RouteChange from "@/components/routeChange";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -108,25 +93,7 @@ export default function RootLayout({
                 <div className="flex min-h-screen w-full flex-col">
                   <header className="sticky bg-white dark:bg-slate-950 top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
                     <MobileNav />
-                    <Breadcrumb className="hidden md:flex">
-                      <BreadcrumbList>
-                        <BreadcrumbItem>
-                          <BreadcrumbLink asChild>
-                            <Link href="#">Dashboard</Link>
-                          </BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                          <BreadcrumbLink asChild>
-                            <Link href="#">Products</Link>
-                          </BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                          <BreadcrumbPage>All Products</BreadcrumbPage>
-                        </BreadcrumbItem>
-                      </BreadcrumbList>
-                    </Breadcrumb>
+                    <RouteChange />
                     <ModeToggle />
                   </header>
                   <div className="flex flex-col sm:gap-4 sm:py-4">

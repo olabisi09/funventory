@@ -16,28 +16,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { addData, fetchData, tables } from "@/lib/requests";
+import {
+  addData,
+  deleteData,
+  fetchData,
+  tables,
+  updateData,
+} from "@/lib/requests";
 import { Spin } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Empty } from "@/components/ui/empty";
-import {
-  CalendarIcon,
-  File,
-  ListFilter,
-  MoreHorizontal,
-  PlusCircle,
-} from "lucide-react";
+import { CalendarIcon, MoreHorizontal, PlusCircle } from "lucide-react";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { useState } from "react";
 import {
@@ -73,12 +71,14 @@ import { validateSale } from "@/lib/validations";
 export default function Sales() {
   const { toast } = useToast();
   const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
   const [date, setDate] = useState<Date>();
+  const [saleId, setSalesId] = useState<number>(0);
 
-  const addSaleMutation = useMutation({
-    mutationKey: ["add-sale"],
-    mutationFn: addData,
-  });
+  const addSaleMutation = useMutation({ mutationFn: addData });
+  const updateSaleMutation = useMutation({ mutationFn: updateData });
+  const deleteSaleMutation = useMutation({ mutationFn: deleteData });
+
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["get-sales"],
     queryFn: async () => fetchData(tables.sales),
@@ -118,6 +118,59 @@ export default function Sales() {
     });
   };
 
+  const handleUpdateSale = (values: FormikValues) => {
+    const payload: Update = {
+      tableName: tables.sales,
+      body: {
+        product_id: values.product,
+        qty_sold: values.qtySold,
+        sale_date: values.saleDate,
+      } as Partial<Sales>,
+      where: "id",
+      equals: saleId,
+    };
+
+    updateSaleMutation.mutate(payload, {
+      onSuccess: () => {
+        refetch();
+        setOpenEdit(false);
+        toast({
+          title: "Success",
+          description: "Sale updated successfully",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error?.message,
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
+  const handleDeleteSale = (sale: Sales) => {
+    deleteSaleMutation.mutate(
+      { tableName: tables.sales, id: sale.id },
+      {
+        onSuccess: () => {
+          refetch();
+          toast({
+            title: "Success",
+            description: "Sale record deleted successfully",
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: error?.message,
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
   if (isLoading) {
     return (
       <main className="grid justify-center items-center">
@@ -137,46 +190,17 @@ export default function Sales() {
   const sales = data?.data as Sales[];
   const products = productsQuery.data?.data as Product[];
   const findProductName = (id: number) =>
-    products?.find((x) => x.id === id)?.product_name;
+    products?.find((x) => x.id === id) as Product;
+  const isEnoughInStock = (id: number, qty: number) => {
+    const product = products?.find((x) => x.id === id) as Product;
+    return product?.stock_qty >= qty;
+  };
 
   return (
     <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-4 md:gap-8">
       <Tabs defaultValue="all">
         <div className="flex items-center">
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="draft">Draft</TabsTrigger>
-            <TabsTrigger value="archived" className="hidden sm:flex">
-              Archived
-            </TabsTrigger>
-          </TabsList>
           <div className="ml-auto flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 gap-1">
-                  <ListFilter className="h-3.5 w-3.5" />
-                  <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Filter
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem checked>
-                  Active
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Archived</DropdownMenuCheckboxItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button size="sm" variant="outline" className="h-8 gap-1">
-              <File className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                Export
-              </span>
-            </Button>
             <Dialog open={openAdd} onOpenChange={setOpenAdd}>
               <DialogTrigger asChild>
                 <Button size="sm" className="h-8 gap-1">
@@ -310,8 +334,9 @@ export default function Sales() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Product</TableHead>
-                      <TableHead>Quantity Sold</TableHead>
                       <TableHead>Date Sold</TableHead>
+                      <TableHead>Quantity Sold</TableHead>
+                      <TableHead>Amount Made</TableHead>
                       <TableHead>
                         <span className="sr-only">Actions</span>
                       </TableHead>
@@ -321,11 +346,15 @@ export default function Sales() {
                     {sales?.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>
-                          {findProductName(item.product_id)}
+                          {findProductName(item.product_id)?.product_name}
+                        </TableCell>
+                        <TableCell>
+                          {format(item.sale_date, "dd MMM yyy, h:mma")}
                         </TableCell>
                         <TableCell>{item.qty_sold}</TableCell>
                         <TableCell>
-                          {format(item.sale_date, "dd MMM yyy, h:mma")}
+                          {findProductName(item.product_id)?.selling_price *
+                            item.qty_sold}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -341,8 +370,151 @@ export default function Sales() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>Edit</DropdownMenuItem>
-                              <DropdownMenuItem>Delete</DropdownMenuItem>
+                              <Dialog
+                                open={openEdit}
+                                onOpenChange={setOpenEdit}
+                              >
+                                <DialogTrigger asChild>
+                                  <DropdownMenuItem
+                                    onSelect={(e) => {
+                                      e.preventDefault();
+                                      setSalesId(item.id);
+                                      setDate(new Date(item.sale_date));
+                                    }}
+                                  >
+                                    Edit
+                                  </DropdownMenuItem>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[500px] max-h-[600px] overflow-y-auto">
+                                  <Formik
+                                    initialValues={{
+                                      product: item.product_id,
+                                      qtySold: item.qty_sold,
+                                      saleDate: item.sale_date,
+                                    }}
+                                    onSubmit={(values) => {
+                                      if (
+                                        isEnoughInStock(
+                                          values.product,
+                                          values.qtySold
+                                        )
+                                      ) {
+                                        handleUpdateSale(values);
+                                      } else {
+                                        toast({
+                                          title: "Error",
+                                          description: "Not enough in stock",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                    validationSchema={validateSale}
+                                    enableReinitialize
+                                  >
+                                    {({ setFieldValue }) => (
+                                      <Form>
+                                        <DialogHeader>
+                                          <DialogTitle>Edit sale</DialogTitle>
+                                          <DialogDescription>
+                                            Update this sale!
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-6 py-4">
+                                          <div className="grid gap-2">
+                                            <Label htmlFor="product">
+                                              Product
+                                            </Label>
+                                            <FormInput
+                                              id="product"
+                                              name="Product"
+                                              placeholder="Product"
+                                              disabled
+                                              value={
+                                                findProductName(item.product_id)
+                                                  ?.product_name
+                                              }
+                                            />
+                                            <ErrorMessage name="product">
+                                              {(msg) => (
+                                                <small className="text-error">
+                                                  {msg}
+                                                </small>
+                                              )}
+                                            </ErrorMessage>
+                                          </div>
+                                          <div className="grid gap-2">
+                                            <Label htmlFor="qtySold">
+                                              Quantity sold
+                                            </Label>
+                                            <FormInput
+                                              id="qtySold"
+                                              type="number"
+                                              name="qtySold"
+                                              placeholder="Quantity sold"
+                                            />
+                                          </div>
+                                          <div className="grid gap-2">
+                                            <Label htmlFor="saleDate">
+                                              Sale date
+                                            </Label>
+                                            <Popover>
+                                              <PopoverTrigger asChild>
+                                                <Button
+                                                  variant={"outline"}
+                                                  className={cn(
+                                                    "justify-start text-left font-normal",
+                                                    !date &&
+                                                      "text-muted-foreground"
+                                                  )}
+                                                >
+                                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                                  {date ? (
+                                                    format(date, "PPP")
+                                                  ) : (
+                                                    <span>Pick a date</span>
+                                                  )}
+                                                </Button>
+                                              </PopoverTrigger>
+                                              <PopoverContent className="w-auto p-0">
+                                                <Calendar
+                                                  mode="single"
+                                                  selected={date}
+                                                  onSelect={setDate}
+                                                  initialFocus
+                                                />
+                                              </PopoverContent>
+                                            </Popover>
+                                            <ErrorMessage name="saleDate">
+                                              {(msg) => (
+                                                <small className="text-error">
+                                                  {msg}
+                                                </small>
+                                              )}
+                                            </ErrorMessage>
+                                          </div>
+                                        </div>
+                                        <DialogFooter>
+                                          <Button
+                                            type="submit"
+                                            isLoading={
+                                              updateSaleMutation.isPending
+                                            }
+                                            loadingText="Saving..."
+                                          >
+                                            Save changes
+                                          </Button>
+                                        </DialogFooter>
+                                      </Form>
+                                    )}
+                                  </Formik>
+                                </DialogContent>
+                              </Dialog>
+
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteSale(item)}
+                              >
+                                Delete
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -354,11 +526,11 @@ export default function Sales() {
                 <Empty heading="No sales yet." />
               )}
             </CardContent>
-            <CardFooter>
+            {/* <CardFooter>
               <div className="text-xs text-muted-foreground">
                 Showing <strong>1-10</strong> of <strong>32</strong> products
               </div>
-            </CardFooter>
+            </CardFooter> */}
           </Card>
         </TabsContent>
       </Tabs>
