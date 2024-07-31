@@ -48,6 +48,7 @@ import { Form, Formik, FormikValues } from "formik";
 import { isInStock } from "@/utils/helpers";
 import { Text } from "@/components/ui/text";
 import Link from "next/link";
+import ProductDetails from "./product-details";
 
 export default function Products() {
   const [openAdd, setOpenAdd] = useState(false);
@@ -150,8 +151,10 @@ export default function Products() {
   const products = data?.data as Product[];
   const tags = tagQuery?.data?.data as Category[];
   const viewData = view?.data?.data;
+  const findCategoryName = (categoryId: number) =>
+    tags?.find((x) => x.id === categoryId)?.category_name as string;
 
-  //const findView = (id: number) => viewData?.find((x) => x.productid === id);
+  const findView = (id: number) => viewData?.find((x) => x.id === id);
 
   return (
     <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-4 md:gap-8">
@@ -393,6 +396,20 @@ export default function Products() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <DropdownMenuItem
+                            onSelect={(e) => e.preventDefault()}
+                          >
+                            Details
+                          </DropdownMenuItem>
+                        </DialogTrigger>
+                        <ProductDetails
+                          product={item}
+                          category={findCategoryName(item?.category_id || 0)}
+                          analytics={findView(item.id)}
+                        />
+                      </Dialog>
                       <DropdownMenuItem>Edit</DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleDeleteProduct(item)}
