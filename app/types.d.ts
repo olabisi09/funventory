@@ -22,6 +22,7 @@ interface Payload {
 interface Update extends Payload {
   where: string;
   equals: string | number;
+  existingImg?: string
 }
 
 interface Delete {
@@ -64,4 +65,18 @@ interface Sales extends BaseInterface {
   product_id: number;
   qty_sold: number;
   sale_date: string;
+}
+
+interface SalesView {
+  id: number;
+  product_name: string;
+  cost_price: number;
+  packaging_cost: number;
+  transportation_cost: number;
+  other_costs?: number;
+  selling_price: number;
+  qty_sold: number;
+  total_cost: number;
+  profit_per_item: number;
+  total_profit: number;
 }

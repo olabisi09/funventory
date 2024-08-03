@@ -6,7 +6,7 @@ const supabase = createClient();
 export const tables = {
   products: "products",
   tags: "categories",
-  profitView: "product_profit_view",
+  salesProfitView: "sales_profit_view",
   sales: "sales",
 }
 
@@ -28,6 +28,20 @@ export const saveFileToDb = async (file: File, productName: string) => {
   return data.path;
 };
 
+export const updateFileInDb = async (file: File, existingFileName: string) => {
+  let strippedFileName = existingFileName.replace("public/", "")
+  const { data, error } = await supabase.storage
+    .from("product-images")
+    .update(strippedFileName, file, {
+      cacheControl: "3600",
+      upsert: true,
+    });
+  if (error) {
+    return error;
+  }
+  return data.path;
+};
+
 export const deleteFileFromDb = async (fileName: string) => await supabase.storage.from("product-images").remove([fileName]);
 
 export const downloadFileFromSupabase = (fileName: string) => {
@@ -41,8 +55,10 @@ export const downloadFileFromSupabase = (fileName: string) => {
       }
     });
   
-  return data;
+  return data.publicUrl;
 }
+
+//Alba-1722199493984.JPG
 
 export const addProduct = async (payload: Payload) => {
   const filePath = await saveFileToDb(payload.body.product_img, payload.body.product_name);
@@ -51,6 +67,23 @@ export const addProduct = async (payload: Payload) => {
   }
   else throw new Error('Failed to upload image');
   return await addData(payload);
+}
+export const updateProduct = async (payload: Update) => {
+  if (payload.body.product_img && payload.existingImg) {
+    const filePath = payload.existingImg.includes("{") ? await saveFileToDb(payload.body.product_img, payload.body.product_name) : await updateFileInDb(payload.body.product_img, payload.existingImg);
+    if (filePath) {
+      payload.body.product_img = filePath;
+    }
+    else throw new Error('Failed to upload image');
+  }
+  const input: Update = {
+    tableName: tables.products,
+    body: payload.body,
+    where: payload.where,
+    equals: payload.equals
+  }
+
+  return await updateData(input);
 }
 
 export const fetchData = async (tableName: string) => await supabase.from(tableName).select()
@@ -78,7 +111,10 @@ export const deleteData = async (payload: Delete) => {
     await deleteFileFromDb(payload.file)
   }
   const { data, error } = await supabase.from(payload.tableName).delete().eq('id', payload.id);
-  return { data, error };
+  if (error) {
+    handleSupabaseError(error)
+  }
+  return data;
 }
 
 export const getTotalRevenue = async () => {

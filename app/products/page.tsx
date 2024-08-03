@@ -19,6 +19,8 @@ import {
   fetchData,
   getFileFromSupabase,
   tables,
+  updateData,
+  updateProduct,
 } from "@/lib/requests";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -52,15 +54,13 @@ import ProductDetails from "./product-details";
 
 export default function Products() {
   const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [product, setProduct] = useState<Product>({} as Product);
   const { toast } = useToast();
 
-  const addProductMutation = useMutation({
-    mutationKey: ["add-product"],
-    mutationFn: addProduct,
-  });
-  const deleteProductMutation = useMutation({
-    mutationFn: deleteData,
-  });
+  const addProductMutation = useMutation({ mutationFn: addProduct });
+  const updateProductMutation = useMutation({ mutationFn: updateProduct });
+  const deleteProductMutation = useMutation({ mutationFn: deleteData });
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["get-products"],
@@ -69,7 +69,7 @@ export default function Products() {
 
   const view = useQuery({
     queryKey: ["get-view-product"],
-    queryFn: async () => fetchData(tables.profitView),
+    queryFn: async () => fetchData(tables.salesProfitView),
   });
 
   const tagQuery = useQuery({
@@ -82,6 +82,7 @@ export default function Products() {
       const payload: Payload = {
         tableName: "products",
         body: {
+          product_id: product?.id,
           product_name: values.productName,
           product_description: values.productDescription,
           product_img: values.picture,
@@ -108,6 +109,46 @@ export default function Products() {
     } catch (error: any) {
       console.log(error);
     }
+  };
+
+  const handleUpdateProduct = (values: FormikValues, resetForm: () => void) => {
+    const payload: Update = {
+      tableName: tables.products,
+      body: {
+        product_name: values.productName,
+        product_description: values.productDescription,
+        product_img: values.picture,
+        category_id: values.category,
+        cost_price: values.costPrice,
+        packaging_cost: values.packaging,
+        transportation_cost: values.transport,
+        other_costs: values.otherCosts,
+        stock_qty: values.stockQty,
+        selling_price: values.sellingPrice,
+      } as Partial<Product>,
+      existingImg: product?.product_img,
+      where: "id",
+      equals: product?.id,
+    };
+
+    updateProductMutation.mutate(payload, {
+      onSuccess: () => {
+        refetch();
+        setOpenEdit(false);
+        toast({
+          title: "Success",
+          description: "Product updated successfully",
+        });
+        resetForm();
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error?.message,
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   const handleDeleteProduct = (product: Product) => {
@@ -151,8 +192,8 @@ export default function Products() {
   const products = data?.data as Product[];
   const tags = tagQuery?.data?.data as Category[];
   const viewData = view?.data?.data;
-  const findCategoryName = (categoryId: number) =>
-    tags?.find((x) => x.id === categoryId)?.category_name as string;
+  const findCategory = (categoryId: number) =>
+    tags?.find((x) => x.id === categoryId) as Category;
 
   const findView = (id: number) => viewData?.find((x) => x.id === id);
 
@@ -406,11 +447,199 @@ export default function Products() {
                         </DialogTrigger>
                         <ProductDetails
                           product={item}
-                          category={findCategoryName(item?.category_id || 0)}
+                          category={
+                            findCategory(item?.category_id || 0)?.category_name
+                          }
                           analytics={findView(item.id)}
                         />
                       </Dialog>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+                        <DialogTrigger asChild>
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault();
+                              setProduct(item);
+                            }}
+                          >
+                            Edit
+                          </DropdownMenuItem>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px] max-h-[600px] overflow-y-auto">
+                          <Formik
+                            initialValues={{
+                              productName: item.product_name,
+                              productDescription: item.product_description,
+                              stockQty: item.stock_qty,
+                              costPrice: item.cost_price,
+                              sellingPrice: item.selling_price,
+                              packaging: item.packaging_cost,
+                              transport: item.transportation_cost,
+                              otherCosts: item.other_costs,
+                              picture: null,
+                              category: findCategory(item.category_id!)?.id,
+                            }}
+                            onSubmit={(values, { resetForm }) => {
+                              handleUpdateProduct(values, resetForm);
+                            }}
+                            enableReinitialize
+                          >
+                            {({ setFieldValue }) => (
+                              <Form>
+                                <DialogHeader>
+                                  <DialogTitle>
+                                    Edit product: {item.product_name}
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Update this product
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-6 py-4">
+                                  <div className="grid gap-2">
+                                    <Label htmlFor="productName">
+                                      Product name
+                                    </Label>
+                                    <FormInput
+                                      id="productName"
+                                      name="productName"
+                                      placeholder="Product name"
+                                    />
+                                  </div>
+                                  <div className="grid gap-2">
+                                    <Label htmlFor="productDescription">
+                                      Product description (optional)
+                                    </Label>
+                                    <FormInput
+                                      id="productDescription"
+                                      name="productDescription"
+                                      placeholder="Product description"
+                                    />
+                                  </div>
+                                  <section className="grid grid-cols-2 gap-x-2 gap-y-4">
+                                    <div className="grid gap-2">
+                                      <Label htmlFor="stockQty">
+                                        Quantity in stock
+                                      </Label>
+                                      <FormInput
+                                        type="number"
+                                        id="stockQty"
+                                        name="stockQty"
+                                        placeholder="Quantity in stock"
+                                      />
+                                    </div>
+                                    <div className="grid gap-2">
+                                      <Label htmlFor="costPrice">
+                                        Cost price
+                                      </Label>
+                                      <FormInput
+                                        type="number"
+                                        id="costPrice"
+                                        name="costPrice"
+                                        placeholder="Cost price"
+                                      />
+                                    </div>
+                                    <div className="grid gap-2">
+                                      <Label htmlFor="sellingPrice">
+                                        Selling price
+                                      </Label>
+                                      <FormInput
+                                        type="number"
+                                        id="sellingPrice"
+                                        name="sellingPrice"
+                                        placeholder="Selling price"
+                                      />
+                                    </div>
+                                    <div className="grid gap-2">
+                                      <Label htmlFor="packaging">
+                                        Packaging cost
+                                      </Label>
+                                      <FormInput
+                                        type="number"
+                                        id="packaging"
+                                        name="packaging"
+                                        placeholder="Packaging cost"
+                                      />
+                                    </div>
+                                    <div className="grid gap-2">
+                                      <Label htmlFor="transport">
+                                        Transport cost
+                                      </Label>
+                                      <FormInput
+                                        type="number"
+                                        id="transport"
+                                        name="transport"
+                                        placeholder="Transport cost"
+                                      />
+                                    </div>
+                                    <div className="grid gap-2">
+                                      <Label htmlFor="otherCost">
+                                        Other costs
+                                      </Label>
+                                      <FormInput
+                                        type="number"
+                                        id="otherCost"
+                                        name="otherCost"
+                                        placeholder="Other costs"
+                                      />
+                                    </div>
+                                  </section>
+                                  <div className="grid gap-2">
+                                    <Label htmlFor="productName">
+                                      Product tag
+                                    </Label>
+                                    <Select
+                                      onValueChange={(val) =>
+                                        setFieldValue("category", parseInt(val))
+                                      }
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select a tag for this product" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectGroup>
+                                          <SelectLabel>Tags</SelectLabel>
+                                          {tags?.map((tag) => (
+                                            <SelectItem
+                                              key={tag.id}
+                                              value={`${tag.id}`}
+                                            >
+                                              {tag.category_name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectGroup>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="grid w-full items-center gap-2">
+                                    <Label htmlFor="picture">
+                                      Change picture (optional)
+                                    </Label>
+                                    <Input
+                                      id="picture"
+                                      name="picture"
+                                      type="file"
+                                      onChange={(e) => {
+                                        const file = e?.target?.files;
+                                        if (file) {
+                                          setFieldValue("picture", file[0]);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                <DialogFooter>
+                                  <Button
+                                    type="submit"
+                                    isLoading={updateProductMutation.isPending}
+                                    loadingText="Saving..."
+                                  >
+                                    Save changes
+                                  </Button>
+                                </DialogFooter>
+                              </Form>
+                            )}
+                          </Formik>
+                        </DialogContent>
+                      </Dialog>
                       <DropdownMenuItem
                         onClick={() => handleDeleteProduct(item)}
                       >

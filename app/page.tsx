@@ -13,14 +13,17 @@ import { Spin } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Text } from "@/components/ui/text";
 import { useToast } from "@/components/ui/use-toast";
-import { getTotalRevenue } from "@/lib/requests";
-import { useQuery } from "@tanstack/react-query";
+import { fetchData, getTotalRevenue, tables } from "@/lib/requests";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   Activity,
   ArrowUpRight,
@@ -33,14 +36,17 @@ import Link from "next/link";
 export default function Index() {
   const { toast } = useToast();
 
-  const { data, error, isLoading, isError } = useQuery({
-    queryKey: ["get-dashboard-data"],
-    queryFn: getTotalRevenue,
-    //staleTime: 60 * 1000, // 1 minute
-    //refetchInterval: 60 * 1000, // 1 minute
+  const [dashboardMetrics, sales] = useQueries({
+    queries: [
+      { queryKey: ["get-dashboard-metrics"], queryFn: getTotalRevenue },
+      {
+        queryKey: ["get-dashboard-profit"],
+        queryFn: () => fetchData(tables.salesProfitView),
+      },
+    ],
   });
 
-  if (isLoading) {
+  if (dashboardMetrics.isLoading) {
     return (
       <main className="grid justify-center items-center">
         <Spin />
@@ -48,15 +54,16 @@ export default function Index() {
     );
   }
 
-  if (isError) {
+  if (dashboardMetrics.isError) {
     toast({
       title: "Error",
-      description: error?.message,
+      description: dashboardMetrics.error?.message,
       variant: "destructive",
     });
   }
 
-  const { total_revenue, total_sales } = data;
+  const { total_revenue, total_sales, total_profit } = dashboardMetrics.data;
+  const salesData = sales.data?.data as SalesView[];
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
@@ -68,23 +75,23 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">&#8358;{total_revenue}</div>
-            {/* <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p> */}
+            <p className="text-xs text-muted-foreground">
+              You&apos;ve turned over this much so far
+            </p>
           </CardContent>
         </Card>
-        {/* <Card x-chunk="dashboard-01-chunk-1">
+        <Card x-chunk="dashboard-01-chunk-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Subscriptions</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Profit</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+2350</div>
+            <div className="text-2xl font-bold">&#8358;{total_profit}</div>
             <p className="text-xs text-muted-foreground">
-              +180.1% from last month
+              You&apos;ve made this much profit so far
             </p>
           </CardContent>
-        </Card> */}
+        </Card>
         <Card x-chunk="dashboard-01-chunk-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Sales</CardTitle>
@@ -92,9 +99,9 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+{total_sales}</div>
-            {/* <p className="text-xs text-muted-foreground">
-              +19% from last month
-            </p> */}
+            <p className="text-xs text-muted-foreground">
+              You&apos;ve sold this many products so far
+            </p>
           </CardContent>
         </Card>
         {/* <Card x-chunk="dashboard-01-chunk-3">
@@ -110,135 +117,50 @@ export default function Index() {
           </CardContent>
         </Card> */}
       </div>
-      {/* <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
         <Card className="xl:col-span-2" x-chunk="dashboard-01-chunk-4">
           <CardHeader className="flex flex-row items-center">
             <div className="grid gap-2">
-              <CardTitle>Transactions</CardTitle>
+              <CardTitle>Sales Summary</CardTitle>
               <CardDescription>
-                Recent transactions from your store.
+                A breakdown of your recent sales.
               </CardDescription>
             </div>
             <Button asChild size="sm" className="ml-auto gap-1">
-              <Link href="#">
+              <Link href="/sales">
                 View All
                 <ArrowUpRight className="h-4 w-4" />
               </Link>
             </Button>
           </CardHeader>
           <CardContent>
-            <Table>
+            <Table className="mt-4">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead className="hidden xl:table-column">Type</TableHead>
-                  <TableHead className="hidden xl:table-column">
-                    Status
-                  </TableHead>
-                  <TableHead className="hidden xl:table-column">Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead>Total cost</TableHead>
+                  <TableHead>Quantity sold</TableHead>
+                  <TableHead>Amount sold</TableHead>
+                  <TableHead>Profit per product</TableHead>
+                  <TableHead>Total profit</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Liam Johnson</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      liam@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden xl:table-column">Sale</TableCell>
-                  <TableCell className="hidden xl:table-column">
-                    <Badge className="text-xs" variant="outline">
-                      Approved
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
-                    2023-06-23
-                  </TableCell>
-                  <TableCell className="text-right">&#8358;250.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Olivia Smith</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      olivia@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden xl:table-column">
-                    Refund
-                  </TableCell>
-                  <TableCell className="hidden xl:table-column">
-                    <Badge className="text-xs" variant="outline">
-                      Declined
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
-                    2023-06-24
-                  </TableCell>
-                  <TableCell className="text-right">&#8358;150.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Noah Williams</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      noah@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden xl:table-column">
-                    Subscription
-                  </TableCell>
-                  <TableCell className="hidden xl:table-column">
-                    <Badge className="text-xs" variant="outline">
-                      Approved
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
-                    2023-06-25
-                  </TableCell>
-                  <TableCell className="text-right">&#8358;350.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Emma Brown</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      emma@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden xl:table-column">Sale</TableCell>
-                  <TableCell className="hidden xl:table-column">
-                    <Badge className="text-xs" variant="outline">
-                      Approved
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
-                    2023-06-26
-                  </TableCell>
-                  <TableCell className="text-right">&#8358;450.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Liam Johnson</div>
-                    <div className="hidden text-sm text-muted-foreground md:inline">
-                      liam@example.com
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden xl:table-column">Sale</TableCell>
-                  <TableCell className="hidden xl:table-column">
-                    <Badge className="text-xs" variant="outline">
-                      Approved
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
-                    2023-06-27
-                  </TableCell>
-                  <TableCell className="text-right">&#8358;550.00</TableCell>
-                </TableRow>
+                {salesData?.map((item) => (
+                  <TableRow>
+                    <TableCell>{item.product_name}</TableCell>
+                    <TableCell>&#8358;{item.total_cost}</TableCell>
+                    <TableCell>{item.qty_sold}</TableCell>
+                    <TableCell>&#8358;{item.selling_price}</TableCell>
+                    <TableCell>&#8358;{item.profit_per_item}</TableCell>
+                    <TableCell>&#8358;{item.total_profit}</TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
-        <Card x-chunk="dashboard-01-chunk-5">
+        {/* <Card x-chunk="dashboard-01-chunk-5">
           <CardHeader>
             <CardTitle>Recent Sales</CardTitle>
           </CardHeader>
@@ -256,7 +178,7 @@ export default function Index() {
                   olivia.martin@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+&#8358;1,999.00</div>
+              <div className="ml-auto font-medium">+$1,999.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -269,7 +191,7 @@ export default function Index() {
                   jackson.lee@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+&#8358;39.00</div>
+              <div className="ml-auto font-medium">+$39.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -284,7 +206,7 @@ export default function Index() {
                   isabella.nguyen@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+&#8358;299.00</div>
+              <div className="ml-auto font-medium">+$299.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -295,7 +217,7 @@ export default function Index() {
                 <p className="text-sm font-medium leading-none">William Kim</p>
                 <p className="text-sm text-muted-foreground">will@email.com</p>
               </div>
-              <div className="ml-auto font-medium">+&#8358;99.00</div>
+              <div className="ml-auto font-medium">+$99.00</div>
             </div>
             <div className="flex items-center gap-4">
               <Avatar className="hidden h-9 w-9 sm:flex">
@@ -308,11 +230,11 @@ export default function Index() {
                   sofia.davis@email.com
                 </p>
               </div>
-              <div className="ml-auto font-medium">+&#8358;39.00</div>
+              <div className="ml-auto font-medium">+$39.00</div>
             </div>
           </CardContent>
-        </Card>
-      </div> */}
+        </Card> */}
+      </div>
     </main>
   );
 }
