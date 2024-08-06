@@ -79,14 +79,12 @@ export default function Products() {
 
   const handleAddProduct = async (values: FormikValues) => {
     try {
-      const payload: Payload = {
+      let payload: Payload = {
         tableName: "products",
         body: {
-          product_id: product?.id,
           product_name: values.productName,
           product_description: values.productDescription,
           product_img: values.picture,
-          category_id: values.category,
           cost_price: values.costPrice,
           packaging_cost: values.packaging,
           transportation_cost: values.transport,
@@ -95,6 +93,10 @@ export default function Products() {
           selling_price: values.sellingPrice,
         },
       };
+
+      if (values.category) {
+        payload.body.category_id = values.category;
+      }
 
       await addProductMutation.mutateAsync(payload, {
         onSuccess: () => {
@@ -112,12 +114,11 @@ export default function Products() {
   };
 
   const handleUpdateProduct = (values: FormikValues, resetForm: () => void) => {
-    const payload: Update = {
+    let payload: Update = {
       tableName: tables.products,
       body: {
         product_name: values.productName,
         product_description: values.productDescription,
-        product_img: values.picture,
         category_id: values.category,
         cost_price: values.costPrice,
         packaging_cost: values.packaging,
@@ -130,6 +131,10 @@ export default function Products() {
       where: "id",
       equals: product?.id,
     };
+
+    if (values.picture) {
+      payload.body.product_img = values.picture;
+    }
 
     updateProductMutation.mutate(payload, {
       onSuccess: () => {

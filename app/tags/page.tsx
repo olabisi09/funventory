@@ -28,7 +28,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { addData, deleteData, fetchData, tables } from "@/lib/requests";
+import {
+  addData,
+  deleteData,
+  fetchData,
+  tables,
+  updateData,
+} from "@/lib/requests";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -48,15 +54,13 @@ import { Form, Formik, FormikValues } from "formik";
 
 export default function Tags() {
   const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [tag, setTag] = useState<Category>({} as Category);
   const { toast } = useToast();
 
-  const addTagMutation = useMutation({
-    mutationKey: ["add-tag"],
-    mutationFn: addData,
-  });
-  const deleteTagMutation = useMutation({
-    mutationFn: deleteData,
-  });
+  const addTagMutation = useMutation({ mutationFn: addData });
+  const editTagMutation = useMutation({ mutationFn: updateData });
+  const deleteTagMutation = useMutation({ mutationFn: deleteData });
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["get-tags"],
@@ -85,6 +89,38 @@ export default function Tags() {
       });
     } catch (error: any) {
       console.log(error);
+    }
+  };
+
+  const handleEditTag = async (values: FormikValues, resetForm: () => void) => {
+    try {
+      const payload: Update = {
+        tableName: tables.tags,
+        body: {
+          category_name: values.categoryName,
+          category_description: values.categoryDescription,
+        },
+        where: "id",
+        equals: tag?.id,
+      };
+
+      await editTagMutation.mutateAsync(payload, {
+        onSuccess: () => {
+          refetch();
+          setOpenEdit(false);
+          resetForm();
+          toast({
+            title: "Success",
+            description: "Tag updated successfully",
+          });
+        },
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -270,7 +306,76 @@ export default function Tags() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>Edit</DropdownMenuItem>
+                              <Dialog
+                                open={openEdit}
+                                onOpenChange={setOpenEdit}
+                              >
+                                <DialogTrigger asChild>
+                                  <DropdownMenuItem
+                                    onSelect={(e) => {
+                                      e.preventDefault();
+                                      setTag(item);
+                                    }}
+                                  >
+                                    Edit
+                                  </DropdownMenuItem>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[500px] max-h-[600px] overflow-y-auto">
+                                  <Formik
+                                    initialValues={{
+                                      categoryName: item?.category_name,
+                                      categoryDescription:
+                                        item?.category_description,
+                                    }}
+                                    onSubmit={(values, { resetForm }) => {
+                                      handleEditTag(values, resetForm);
+                                    }}
+                                    enableReinitialize
+                                  >
+                                    <Form>
+                                      <DialogHeader>
+                                        <DialogTitle>
+                                          Edit tag: {item.category_name}
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                          Update this tag
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <div className="grid gap-6 py-4">
+                                        <div className="grid gap-2">
+                                          <Label htmlFor="categoryName">
+                                            Tag name
+                                          </Label>
+                                          <FormInput
+                                            id="categoryName"
+                                            name="categoryName"
+                                            placeholder="Tag name"
+                                          />
+                                        </div>
+                                        <div className="grid gap-2">
+                                          <Label htmlFor="categoryDescription">
+                                            Tag description
+                                          </Label>
+                                          <FormInput
+                                            id="categoryDescription"
+                                            name="categoryDescription"
+                                            placeholder="Tag description"
+                                          />
+                                        </div>
+                                      </div>
+                                      <DialogFooter>
+                                        <Button
+                                          type="submit"
+                                          isLoading={editTagMutation.isPending}
+                                          loadingText="Saving..."
+                                        >
+                                          Save changes
+                                        </Button>
+                                      </DialogFooter>
+                                    </Form>
+                                  </Formik>
+                                </DialogContent>
+                              </Dialog>
                               <DropdownMenuItem
                                 onClick={() => handleDeleteTag(item.id)}
                               >

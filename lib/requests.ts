@@ -14,8 +14,39 @@ export const getFileFromSupabase = (fileName: string) => {
   return `${projectId}/storage/v1/object/public/product-images/${fileName}`?.replace('{}', '')
 }
 
+export const getAllFilesFromBucket = async () => {
+  const { data, error } = await supabase
+  .storage
+  .from('product-images')
+  .list('', {
+    limit: 100,
+    offset: 0,
+  })
+
+  return { data, error }
+}
+
+export const deleteFilesThatStartWith = async (substring: string) => {
+  const { data, error } = await getAllFilesFromBucket()
+  if (error) {
+    handleSupabaseError(error)
+    return []
+  }
+
+  const filesToDelete = data?.filter(x => x?.name?.startsWith(substring))
+  if (!filesToDelete || filesToDelete.length === 0) {
+    return [];
+  }
+
+  const { error: deleteError } = await supabase.storage.from('product-images').remove(filesToDelete.map(x => x?.name));
+  if (deleteError) {
+    handleSupabaseError(deleteError)
+    return [];
+  }
+}
+
 export const saveFileToDb = async (file: File, productName: string) => {
-  const fileName = `${productName}-${Date.now()}.${file.name.split('.').pop()}`
+  const fileName = `${productName}-${Date.now()}.${file?.name.split('.').pop()}`
   const { data, error } = await supabase.storage
     .from("product-images")
     .upload(fileName, file, {
@@ -37,7 +68,7 @@ export const updateFileInDb = async (file: File, existingFileName: string) => {
       upsert: true,
     });
   if (error) {
-    return error;
+    return '';
   }
   return data.path;
 };
@@ -69,13 +100,23 @@ export const addProduct = async (payload: Payload) => {
   return await addData(payload);
 }
 export const updateProduct = async (payload: Update) => {
-  if (payload.body.product_img && payload.existingImg) {
-    const filePath = payload.existingImg.includes("{") ? await saveFileToDb(payload.body.product_img, payload.body.product_name) : await updateFileInDb(payload.body.product_img, payload.existingImg);
+  await deleteFilesThatStartWith(payload.body.product_name);
+  let filePath = ''
+  if (!payload.body.product_img && payload.existingImg) {
+    filePath = await saveFileToDb(payload.body.product_img, payload.body.product_name);
     if (filePath) {
       payload.body.product_img = filePath;
     }
     else throw new Error('Failed to upload image');
   }
+  else if (payload.body.product_img && payload.existingImg) {
+    filePath = await saveFileToDb(payload.body.product_img, payload.body.product_name)
+    if (filePath) {
+      payload.body.product_img = filePath;
+    }
+    else throw new Error('Failed to upload image');
+  }
+
   const input: Update = {
     tableName: tables.products,
     body: payload.body,

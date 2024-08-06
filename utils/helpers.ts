@@ -11,6 +11,6 @@ export const isInStock = (qty: number): string => {
   }
 }
 
-export const handleSupabaseError = (error: PostgrestError) => {
+export const handleSupabaseError = (error: PostgrestError | Error) => {
   throw new Error(`${error.message}`);
 }

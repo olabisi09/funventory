@@ -147,7 +147,7 @@ export default function Index() {
               </TableHeader>
               <TableBody>
                 {salesData?.map((item) => (
-                  <TableRow>
+                  <TableRow key={item.id}>
                     <TableCell>{item.product_name}</TableCell>
                     <TableCell>&#8358;{item.total_cost}</TableCell>
                     <TableCell>{item.qty_sold}</TableCell>
