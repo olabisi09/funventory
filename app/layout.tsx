@@ -34,7 +34,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main className="min-h-screen flex flex-col justify-center items-center dark:bg-slate-950 dark:border-slate-950">
+          <main className="min-h-screen flex flex-col justify-center items-center dark:bg-zinc-950 dark:border-zinc-950">
             <Providers>
               <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
                 <div className="hidden border-r bg-muted/40 md:block">
@@ -91,7 +91,7 @@ export default function RootLayout({
                   </div>
                 </div>
                 <div className="flex min-h-screen w-full flex-col">
-                  <header className="sticky bg-white dark:bg-slate-950 top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+                  <header className="sticky bg-white dark:bg-zinc-950 top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
                     <MobileNav />
                     <RouteChange />
                     <ModeToggle />

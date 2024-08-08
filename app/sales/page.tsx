@@ -349,7 +349,7 @@ export default function Sales() {
                           {findProductName(item.product_id)?.product_name}
                         </TableCell>
                         <TableCell>
-                          {format(item.sale_date, "dd MMM yyy, h:mma")}
+                          {format(item.sale_date, "dd MMM yyy")}
                         </TableCell>
                         <TableCell>{item.qty_sold}</TableCell>
                         <TableCell>

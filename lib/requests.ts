@@ -8,45 +8,51 @@ export const tables = {
   tags: "categories",
   salesProfitView: "sales_profit_view",
   sales: "sales",
-}
+};
 
 export const getFileFromSupabase = (fileName: string) => {
-  return `${projectId}/storage/v1/object/public/product-images/${fileName}`?.replace('{}', '')
-}
+  return `${projectId}/storage/v1/object/public/product-images/${fileName}`?.replace(
+    "{}",
+    ""
+  );
+};
 
 export const getAllFilesFromBucket = async () => {
-  const { data, error } = await supabase
-  .storage
-  .from('product-images')
-  .list('', {
-    limit: 100,
-    offset: 0,
-  })
+  const { data, error } = await supabase.storage
+    .from("product-images")
+    .list("", {
+      limit: 100,
+      offset: 0,
+    });
 
-  return { data, error }
-}
+  return { data, error };
+};
 
 export const deleteFilesThatStartWith = async (substring: string) => {
-  const { data, error } = await getAllFilesFromBucket()
+  const { data, error } = await getAllFilesFromBucket();
   if (error) {
-    handleSupabaseError(error)
-    return []
+    handleSupabaseError(error);
+    return [];
   }
 
-  const filesToDelete = data?.filter(x => x?.name?.startsWith(substring))
+  const filesToDelete = data?.filter((x) => x?.name?.startsWith(substring));
   if (!filesToDelete || filesToDelete.length === 0) {
     return [];
   }
 
-  const { error: deleteError } = await supabase.storage.from('product-images').remove(filesToDelete.map(x => x?.name));
+  const { error: deleteError } = await supabase.storage
+    .from("product-images")
+    .remove(filesToDelete.map((x) => x?.name));
   if (deleteError) {
-    handleSupabaseError(deleteError)
+    handleSupabaseError(deleteError);
     return [];
   }
-}
+};
 
 export const saveFileToDb = async (file: File, productName: string) => {
-  const fileName = `${productName}-${Date.now()}.${file?.name.split('.').pop()}`
+  const fileName = `${productName}-${Date.now()}.${file?.name
+    .split(".")
+    .pop()}`;
   const { data, error } = await supabase.storage
     .from("product-images")
     .upload(fileName, file, {
@@ -60,7 +66,7 @@ export const saveFileToDb = async (file: File, productName: string) => {
 };
 
 export const updateFileInDb = async (file: File, existingFileName: string) => {
-  let strippedFileName = existingFileName.replace("public/", "")
+  let strippedFileName = existingFileName.replace("public/", "");
   const { data, error } = await supabase.storage
     .from("product-images")
     .update(strippedFileName, file, {
@@ -68,12 +74,13 @@ export const updateFileInDb = async (file: File, existingFileName: string) => {
       upsert: true,
     });
   if (error) {
-    return '';
+    return "";
   }
   return data.path;
 };
 
-export const deleteFileFromDb = async (fileName: string) => await supabase.storage.from("product-images").remove([fileName]);
+export const deleteFileFromDb = async (fileName: string) =>
+  await supabase.storage.from("product-images").remove([fileName]);
 
 export const downloadFileFromSupabase = (fileName: string) => {
   const { data } = supabase.storage
@@ -82,25 +89,28 @@ export const downloadFileFromSupabase = (fileName: string) => {
       transform: {
         width: 64,
         height: 64,
-        quality: 100
-      }
+        quality: 100,
+      },
     });
-  
+
   return data.publicUrl;
-}
+};
 
 //Alba-1722199493984.JPG
 
 export const addProduct = async (payload: Payload) => {
-  const filePath = await saveFileToDb(payload.body.product_img, payload.body.product_name);
+  const filePath = await saveFileToDb(
+    payload.body.product_img,
+    payload.body.product_name
+  );
   if (filePath) {
     payload.body.product_img = filePath;
-  }
-  else throw new Error('Failed to upload image');
+  } else throw new Error("Failed to upload image");
   return await addData(payload);
-}
+};
 export const updateProduct = async (payload: Update) => {
-  await deleteFilesThatStartWith(payload.body.product_name);
+  if (payload.body.product_img) {
+    await deleteFilesThatStartWith(payload.body.product_name);
   let filePath = ''
   if (!payload.body.product_img && payload.existingImg) {
     filePath = await saveFileToDb(payload.body.product_img, payload.body.product_name);
@@ -116,53 +126,63 @@ export const updateProduct = async (payload: Update) => {
     }
     else throw new Error('Failed to upload image');
   }
+  }
 
   const input: Update = {
     tableName: tables.products,
     body: payload.body,
     where: payload.where,
-    equals: payload.equals
-  }
+    equals: payload.equals,
+  };
 
   return await updateData(input);
-}
+};
 
-export const fetchData = async (tableName: string) => await supabase.from(tableName).select()
+export const fetchData = async (tableName: string) =>
+  await supabase.from(tableName).select();
 
 export const addData = async (payload: Payload) => {
-  const { data, error } = await supabase.from(payload.tableName).insert(payload.body);
+  const { data, error } = await supabase
+    .from(payload.tableName)
+    .insert(payload.body);
 
   if (error) {
-    handleSupabaseError(error)
+    handleSupabaseError(error);
   }
   return data;
-}
+};
 
 export const updateData = async (payload: Update) => {
-  const { data, error } = await supabase.from(payload.tableName).update(payload.body).eq(payload.where, payload.equals);
+  const { data, error } = await supabase
+    .from(payload.tableName)
+    .update(payload.body)
+    .eq(payload.where, payload.equals);
 
   if (error) {
-    handleSupabaseError(error)
+    handleSupabaseError(error);
   }
   return data;
-}
+};
 
 export const deleteData = async (payload: Delete) => {
   if (payload.file) {
-    await deleteFileFromDb(payload.file)
+    await deleteFileFromDb(payload.file);
   }
-  const { data, error } = await supabase.from(payload.tableName).delete().eq('id', payload.id);
+  const { data, error } = await supabase
+    .from(payload.tableName)
+    .delete()
+    .eq("id", payload.id);
   if (error) {
-    handleSupabaseError(error)
+    handleSupabaseError(error);
   }
   return data;
-}
+};
 
 export const getTotalRevenue = async () => {
-  const { data, error } = await supabase.rpc('get_dashboard');
+  const { data, error } = await supabase.rpc("get_dashboard");
 
   if (error) {
-    handleSupabaseError(error)
+    handleSupabaseError(error);
   }
   return data;
-}
+};

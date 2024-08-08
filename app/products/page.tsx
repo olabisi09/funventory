@@ -1,6 +1,14 @@
 "use client";
 import Image from "next/image";
-import { File, ListFilter, MoreHorizontal, PlusCircle } from "lucide-react";
+import {
+  File,
+  ListFilter,
+  MoreHorizontal,
+  PlusCircle,
+  Columns3,
+  LayoutGrid,
+  List,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,11 +59,13 @@ import { isInStock } from "@/utils/helpers";
 import { Text } from "@/components/ui/text";
 import Link from "next/link";
 import ProductDetails from "./product-details";
+import ProductActions from "./actions";
 
 export default function Products() {
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [product, setProduct] = useState<Product>({} as Product);
+  const [productView, setProductView] = useState<"Grid" | "List">("Grid");
   const { toast } = useToast();
 
   const addProductMutation = useMutation({ mutationFn: addProduct });
@@ -200,7 +210,7 @@ export default function Products() {
   const findCategory = (categoryId: number) =>
     tags?.find((x) => x.id === categoryId) as Category;
 
-  const findView = (id: number) => viewData?.find((x) => x.id === id);
+  const findView = (id: number) => viewData?.find((x) => x.product_id === id);
 
   return (
     <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-4 md:gap-8">
@@ -226,12 +236,26 @@ export default function Products() {
               <DropdownMenuCheckboxItem>Archived</DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" variant="outline" className="h-8 gap-1">
-            <File className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Export
-            </span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1">
+                <Columns3 className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                  View: {productView}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setProductView("Grid")}>
+                <LayoutGrid className="h-3.5 w-3.5 mr-2" />
+                <span>Grid</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setProductView("List")}>
+                <List className="h-3.5 w-3.5 mr-2" />
+                <span>List</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Dialog open={openAdd} onOpenChange={setOpenAdd}>
             <DialogTrigger asChild>
               <Button size="sm" className="h-8 gap-1">
@@ -396,43 +420,169 @@ export default function Products() {
         </div>
       </div>
       {products && products.length > 0 ? (
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4 md:p-6">
-          {products.map((item) => (
-            <div
-              key={item.id}
-              className="bg-background rounded-lg overflow-hidden group shadow-[rgba(50,_50,_105,_0.15)_0px_2px_5px_0px,_rgba(0,_0,_0,_0.05)_0px_1px_1px_0px]"
-            >
-              <Link href="#" className="inset-0 z-10" prefetch={false}>
-                <span className="sr-only">View</span>
-              </Link>
-              <Image
-                alt="Product image"
-                className="object-cover w-full h-60"
-                width={400}
-                height={300}
-                src={
-                  item.product_img
-                    ? getFileFromSupabase(item.product_img)
-                    : "/placeholder.svg"
-                }
-              />
-              <div className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">
-                      {item.product_name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {item.product_description}
-                    </p>
+        <>
+          {productView === "Grid" ? (
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4 md:p-6">
+              {products.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-background rounded-lg overflow-hidden group shadow-[rgba(50,_50,_105,_0.15)_0px_2px_5px_0px,_rgba(0,_0,_0,_0.05)_0px_1px_1px_0px]"
+                >
+                  <Link href="#" className="inset-0 z-10" prefetch={false}>
+                    <span className="sr-only">View</span>
+                  </Link>
+                  <Image
+                    alt="Product image"
+                    className="object-cover w-full h-60"
+                    width={400}
+                    height={300}
+                    src={
+                      item.product_img
+                        ? getFileFromSupabase(item.product_img)
+                        : "/placeholder.svg"
+                    }
+                  />
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold">
+                          {item.product_name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {item.product_description}
+                        </p>
+                      </div>
+                      <Badge variant="outline">
+                        {isInStock(item.stock_qty)}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between mt-4">
+                      <span className="text-base font-semibold">
+                        N{item.selling_price}
+                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <DropdownMenuItem
+                                onSelect={(e) => e.preventDefault()}
+                              >
+                                Details
+                              </DropdownMenuItem>
+                            </DialogTrigger>
+                            <ProductDetails
+                              product={item}
+                              category={
+                                findCategory(item?.category_id || 0)
+                                  ?.category_name
+                              }
+                              analytics={findView(item.id)}
+                            />
+                          </Dialog>
+                          <Dialog open={openEdit} onOpenChange={setOpenEdit}>
+                            <DialogTrigger asChild>
+                              <DropdownMenuItem
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  setProduct(item);
+                                }}
+                              >
+                                Edit
+                              </DropdownMenuItem>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[500px] max-h-[600px] overflow-y-auto">
+                              <Formik
+                                initialValues={{
+                                  productName: item.product_name,
+                                  productDescription: item.product_description,
+                                  stockQty: item.stock_qty,
+                                  costPrice: item.cost_price,
+                                  sellingPrice: item.selling_price,
+                                  packaging: item.packaging_cost,
+                                  transport: item.transportation_cost,
+                                  otherCosts: item.other_costs,
+                                  picture: null,
+                                  category: findCategory(item.category_id!)?.id,
+                                }}
+                                onSubmit={(values, { resetForm }) => {
+                                  handleUpdateProduct(values, resetForm);
+                                }}
+                                enableReinitialize
+                              >
+                                {({ setFieldValue }) => (
+                                  <Form>
+                                    <ProductActions
+                                      productName={item.product_name}
+                                      tags={tags}
+                                      setFieldValue={setFieldValue}
+                                    />
+                                    <DialogFooter>
+                                      <Button
+                                        type="submit"
+                                        isLoading={
+                                          updateProductMutation.isPending
+                                        }
+                                        loadingText="Saving..."
+                                      >
+                                        Save changes
+                                      </Button>
+                                    </DialogFooter>
+                                  </Form>
+                                )}
+                              </Formik>
+                            </DialogContent>
+                          </Dialog>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteProduct(item)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                  <Badge variant="outline">{isInStock(item.stock_qty)}</Badge>
                 </div>
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-base font-semibold">
-                    N{item.selling_price}
-                  </span>
-                  {/* <Button size="sm">Add to Cart</Button> */}
+              ))}
+            </section>
+          ) : (
+            <div className="flex flex-col divide-y">
+              {products.map((item) => (
+                <section
+                  key={item.id}
+                  className="flex gap-4 items-center justify-between w-full py-4"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <Image
+                      alt="Product image"
+                      width={50}
+                      height={50}
+                      src={
+                        item.product_img
+                          ? getFileFromSupabase(item.product_img)
+                          : "/placeholder.svg"
+                      }
+                    />
+                    <div>
+                      <Text type="h4">{item.product_name}</Text>
+                      <p className="text-sm text-muted-foreground">
+                        {item.product_description}
+                      </p>
+                      <p>
+                        N{item.selling_price} | {item.stock_qty} in stock
+                      </p>
+                    </div>
+                  </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button aria-haspopup="true" size="icon" variant="ghost">
@@ -490,147 +640,11 @@ export default function Products() {
                           >
                             {({ setFieldValue }) => (
                               <Form>
-                                <DialogHeader>
-                                  <DialogTitle>
-                                    Edit product: {item.product_name}
-                                  </DialogTitle>
-                                  <DialogDescription>
-                                    Update this product
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-6 py-4">
-                                  <div className="grid gap-2">
-                                    <Label htmlFor="productName">
-                                      Product name
-                                    </Label>
-                                    <FormInput
-                                      id="productName"
-                                      name="productName"
-                                      placeholder="Product name"
-                                    />
-                                  </div>
-                                  <div className="grid gap-2">
-                                    <Label htmlFor="productDescription">
-                                      Product description (optional)
-                                    </Label>
-                                    <FormInput
-                                      id="productDescription"
-                                      name="productDescription"
-                                      placeholder="Product description"
-                                    />
-                                  </div>
-                                  <section className="grid grid-cols-2 gap-x-2 gap-y-4">
-                                    <div className="grid gap-2">
-                                      <Label htmlFor="stockQty">
-                                        Quantity in stock
-                                      </Label>
-                                      <FormInput
-                                        type="number"
-                                        id="stockQty"
-                                        name="stockQty"
-                                        placeholder="Quantity in stock"
-                                      />
-                                    </div>
-                                    <div className="grid gap-2">
-                                      <Label htmlFor="costPrice">
-                                        Cost price
-                                      </Label>
-                                      <FormInput
-                                        type="number"
-                                        id="costPrice"
-                                        name="costPrice"
-                                        placeholder="Cost price"
-                                      />
-                                    </div>
-                                    <div className="grid gap-2">
-                                      <Label htmlFor="sellingPrice">
-                                        Selling price
-                                      </Label>
-                                      <FormInput
-                                        type="number"
-                                        id="sellingPrice"
-                                        name="sellingPrice"
-                                        placeholder="Selling price"
-                                      />
-                                    </div>
-                                    <div className="grid gap-2">
-                                      <Label htmlFor="packaging">
-                                        Packaging cost
-                                      </Label>
-                                      <FormInput
-                                        type="number"
-                                        id="packaging"
-                                        name="packaging"
-                                        placeholder="Packaging cost"
-                                      />
-                                    </div>
-                                    <div className="grid gap-2">
-                                      <Label htmlFor="transport">
-                                        Transport cost
-                                      </Label>
-                                      <FormInput
-                                        type="number"
-                                        id="transport"
-                                        name="transport"
-                                        placeholder="Transport cost"
-                                      />
-                                    </div>
-                                    <div className="grid gap-2">
-                                      <Label htmlFor="otherCost">
-                                        Other costs
-                                      </Label>
-                                      <FormInput
-                                        type="number"
-                                        id="otherCost"
-                                        name="otherCost"
-                                        placeholder="Other costs"
-                                      />
-                                    </div>
-                                  </section>
-                                  <div className="grid gap-2">
-                                    <Label htmlFor="productName">
-                                      Product tag
-                                    </Label>
-                                    <Select
-                                      onValueChange={(val) =>
-                                        setFieldValue("category", parseInt(val))
-                                      }
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select a tag for this product" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectGroup>
-                                          <SelectLabel>Tags</SelectLabel>
-                                          {tags?.map((tag) => (
-                                            <SelectItem
-                                              key={tag.id}
-                                              value={`${tag.id}`}
-                                            >
-                                              {tag.category_name}
-                                            </SelectItem>
-                                          ))}
-                                        </SelectGroup>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="grid w-full items-center gap-2">
-                                    <Label htmlFor="picture">
-                                      Change picture (optional)
-                                    </Label>
-                                    <Input
-                                      id="picture"
-                                      name="picture"
-                                      type="file"
-                                      onChange={(e) => {
-                                        const file = e?.target?.files;
-                                        if (file) {
-                                          setFieldValue("picture", file[0]);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                </div>
+                                <ProductActions
+                                  productName={item.product_name}
+                                  tags={tags}
+                                  setFieldValue={setFieldValue}
+                                />
                                 <DialogFooter>
                                   <Button
                                     type="submit"
@@ -652,11 +666,11 @@ export default function Products() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </div>
-              </div>
+                </section>
+              ))}
             </div>
-          ))}
-        </section>
+          )}
+        </>
       ) : (
         <Empty heading="No products yet" />
       )}
