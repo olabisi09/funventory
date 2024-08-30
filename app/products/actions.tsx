@@ -80,21 +80,12 @@ export default function ProductActions({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="packaging">Packaging cost</Label>
+            <Label htmlFor="pT">Packaging/Transportation cost</Label>
             <FormInput
               type="number"
-              id="packaging"
-              name="packaging"
-              placeholder="Packaging cost"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="transport">Transport cost</Label>
-            <FormInput
-              type="number"
-              id="transport"
-              name="transport"
-              placeholder="Transport cost"
+              id="pT"
+              name="pT"
+              placeholder="Packaging/transport cost"
             />
           </div>
           <div className="grid gap-2">
@@ -106,27 +97,28 @@ export default function ProductActions({
               placeholder="Other costs"
             />
           </div>
+          <div className="grid gap-2">
+            <Label htmlFor="productName">Product tag</Label>
+            <Select
+              onValueChange={(val) => setFieldValue("category", parseInt(val))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a tag for this product" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Tags</SelectLabel>
+                  {tags?.map((tag) => (
+                    <SelectItem key={tag.id} value={`${tag.id}`}>
+                      {tag.category_name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </section>
-        <div className="grid gap-2">
-          <Label htmlFor="productName">Product tag</Label>
-          <Select
-            onValueChange={(val) => setFieldValue("category", parseInt(val))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a tag for this product" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Tags</SelectLabel>
-                {tags?.map((tag) => (
-                  <SelectItem key={tag.id} value={`${tag.id}`}>
-                    {tag.category_name}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+
         <div className="grid w-full items-center gap-2">
           <Label htmlFor="picture">Change picture (optional)</Label>
           <Input

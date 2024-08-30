@@ -138,8 +138,29 @@ export const updateProduct = async (payload: Update) => {
   return await updateData(input);
 };
 
-export const fetchData = async (tableName: string) =>
-  await supabase.from(tableName).select();
+export const fetchData = async (tableName: string, ...queryOptions: QueryOptions[]) => {
+  let query = supabase.from(tableName).select();
+  if (queryOptions) {
+    queryOptions.forEach(q => {
+      if (q.comparison === 'eq') {
+        query = query.eq(q.columnToQuery, q.valueToQuery);
+      }
+      if (q.comparison === 'gte') {
+        query = query.gte(q.columnToQuery, q.valueToQuery);
+      }
+      if (q.comparison === 'lte') {
+        query = query.lte(q.columnToQuery, q.valueToQuery);
+      }
+      if (q.comparison === 'gt') {
+        query = query.gt(q.columnToQuery, q.valueToQuery);
+      }
+      if (q.comparison === 'lt') {
+        query = query.lt(q.columnToQuery, q.valueToQuery);
+      }
+    });
+  }
+  return await query;
+}
 
 export const addData = async (payload: Payload) => {
   const { data, error } = await supabase

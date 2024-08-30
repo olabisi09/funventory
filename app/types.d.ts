@@ -37,8 +37,7 @@ interface Product extends BaseInterface {
   product_img?: string;
   category_id?: number;
   cost_price: number;
-  packaging_cost: number;
-  transportation_cost: number;
+  packaging_transportation_cost: number;
   other_costs?: number;
   stock_qty: number;
   selling_price: number;
@@ -53,8 +52,7 @@ interface ProfitView {
   id: number;
   product_name: string;
   cost_price: number;
-  packaging_cost: number;
-  transportation_cost: number;
+  packaging_transportation_cost: number;
   other_costs?: number;
   selling_price: number;
   total_cost: number;
@@ -71,8 +69,7 @@ interface SalesView {
   id: number;
   product_name: string;
   cost_price: number;
-  packaging_cost: number;
-  transportation_cost: number;
+  packaging_transportation_cost: number;
   other_costs?: number;
   selling_price: number;
   qty_sold: number;
@@ -98,4 +95,10 @@ interface Metadata {
   lastModified: string;
   contentLength: number;
   httpStatusCode: number;
+}
+
+interface QueryOptions {
+  comparison?: 'eq' | 'gte' | 'gt' | 'lte' | 'lt'
+  columnToQuery: string;
+  valueToQuery: string | number;
 }

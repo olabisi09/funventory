@@ -1,6 +1,4 @@
 "use client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,17 +11,14 @@ import { Spin } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Text } from "@/components/ui/text";
 import { useToast } from "@/components/ui/use-toast";
 import { fetchData, getTotalRevenue, tables } from "@/lib/requests";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import {
   Activity,
   ArrowUpRight,
@@ -62,7 +57,8 @@ export default function Index() {
     });
   }
 
-  const { total_revenue, total_sales, total_profit } = dashboardMetrics.data;
+  const { total_revenue, total_sales, total_profit, packaging_transport_cost } =
+    dashboardMetrics.data;
   const salesData = sales.data?.data as SalesView[];
 
   return (
@@ -104,18 +100,22 @@ export default function Index() {
             </p>
           </CardContent>
         </Card>
-        {/* <Card x-chunk="dashboard-01-chunk-3">
+        <Card x-chunk="dashboard-01-chunk-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Now</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total P/T Cost on Products
+            </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+573</div>
+            <div className="text-2xl font-bold">
+              +{packaging_transport_cost}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +201 since last hour
+              You&apos;ve spent this much on packaging and transportation so far
             </p>
           </CardContent>
-        </Card> */}
+        </Card>
       </div>
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
         <Card className="xl:col-span-2" x-chunk="dashboard-01-chunk-4">
@@ -146,7 +146,7 @@ export default function Index() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {salesData?.map((item) => (
+                {salesData?.slice(0, 10)?.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.product_name}</TableCell>
                     <TableCell>&#8358;{item.total_cost}</TableCell>

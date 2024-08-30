@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import {
-  File,
   ListFilter,
   MoreHorizontal,
   PlusCircle,
@@ -66,6 +65,7 @@ export default function Products() {
   const [openEdit, setOpenEdit] = useState(false);
   const [product, setProduct] = useState<Product>({} as Product);
   const [productView, setProductView] = useState<"Grid" | "List">("Grid");
+  const [filters, setFilters] = useState<"low" | "out" | "">("");
   const { toast } = useToast();
 
   const addProductMutation = useMutation({ mutationFn: addProduct });
@@ -73,8 +73,23 @@ export default function Products() {
   const deleteProductMutation = useMutation({ mutationFn: deleteData });
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["get-products"],
-    queryFn: async () => fetchData(tables.products),
+    queryKey: ["get-products", filters],
+    queryFn: async () => {
+      if (filters === "low") {
+        return fetchData(
+          tables.products,
+          { comparison: "gt", columnToQuery: "stock_qty", valueToQuery: 0 },
+          { comparison: "lte", columnToQuery: "stock_qty", valueToQuery: 3 }
+        );
+      } else if (filters === "out") {
+        return fetchData(tables.products, {
+          comparison: "eq",
+          columnToQuery: "stock_qty",
+          valueToQuery: 0,
+        });
+      }
+      return fetchData(tables.products);
+    },
   });
 
   const view = useQuery({
@@ -96,8 +111,7 @@ export default function Products() {
           product_description: values.productDescription,
           product_img: values.picture,
           cost_price: values.costPrice,
-          packaging_cost: values.packaging,
-          transportation_cost: values.transport,
+          packaging_transportation_cost: values.pT,
           other_costs: values.otherCosts,
           stock_qty: values.stockQty,
           selling_price: values.sellingPrice,
@@ -131,8 +145,7 @@ export default function Products() {
         product_description: values.productDescription,
         category_id: values.category,
         cost_price: values.costPrice,
-        packaging_cost: values.packaging,
-        transportation_cost: values.transport,
+        packaging_transportation_cost: values.pT,
         other_costs: values.otherCosts,
         stock_qty: values.stockQty,
         selling_price: values.sellingPrice,
@@ -226,14 +239,21 @@ export default function Products() {
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="start">
               <DropdownMenuLabel>Filter by</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem checked>
-                Active
+              <DropdownMenuCheckboxItem
+                checked={filters === "low"}
+                onCheckedChange={() => setFilters("low")}
+              >
+                Low in stock
               </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Archived</DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filters === "out"}
+                onCheckedChange={() => setFilters("out")}
+              >
+                Out of stock
+              </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu>
@@ -273,8 +293,7 @@ export default function Products() {
                   stockQty: 0,
                   costPrice: 0,
                   sellingPrice: "",
-                  packaging: 0,
-                  transport: 0,
+                  pT: 0,
                   otherCosts: 0,
                   picture: null,
                   category: 0,
@@ -339,21 +358,14 @@ export default function Products() {
                           />
                         </div>
                         <div className="grid gap-2">
-                          <Label htmlFor="packaging">Packaging cost</Label>
+                          <Label htmlFor="pT">
+                            Packaging/Transportation cost
+                          </Label>
                           <FormInput
                             type="number"
-                            id="packaging"
-                            name="packaging"
-                            placeholder="Packaging cost"
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="transport">Transport cost</Label>
-                          <FormInput
-                            type="number"
-                            id="transport"
-                            name="transport"
-                            placeholder="Transport cost"
+                            id="pT"
+                            name="pT"
+                            placeholder="Packaging/transport cost"
                           />
                         </div>
                         <div className="grid gap-2">
@@ -365,29 +377,30 @@ export default function Products() {
                             placeholder="Other costs"
                           />
                         </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="productName">Product tag</Label>
+                          <Select
+                            onValueChange={(val) =>
+                              setFieldValue("category", parseInt(val))
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a tag for this product" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectLabel>Tags</SelectLabel>
+                                {tags?.map((tag) => (
+                                  <SelectItem key={tag.id} value={`${tag.id}`}>
+                                    {tag.category_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </section>
-                      <div className="grid gap-2">
-                        <Label htmlFor="productName">Product tag</Label>
-                        <Select
-                          onValueChange={(val) =>
-                            setFieldValue("category", parseInt(val))
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a tag for this product" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectLabel>Tags</SelectLabel>
-                              {tags?.map((tag) => (
-                                <SelectItem key={tag.id} value={`${tag.id}`}>
-                                  {tag.category_name}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
+
                       <div className="grid w-full items-center gap-2">
                         <Label htmlFor="picture">Picture (optional)</Label>
                         <Input
@@ -509,8 +522,7 @@ export default function Products() {
                                   stockQty: item.stock_qty,
                                   costPrice: item.cost_price,
                                   sellingPrice: item.selling_price,
-                                  packaging: item.packaging_cost,
-                                  transport: item.transportation_cost,
+                                  pT: item.packaging_transportation_cost,
                                   otherCosts: item.other_costs,
                                   picture: null,
                                   category: findCategory(item.category_id!)?.id,
@@ -627,8 +639,7 @@ export default function Products() {
                               stockQty: item.stock_qty,
                               costPrice: item.cost_price,
                               sellingPrice: item.selling_price,
-                              packaging: item.packaging_cost,
-                              transport: item.transportation_cost,
+                              pT: item.packaging_transportation_cost,
                               otherCosts: item.other_costs,
                               picture: null,
                               category: findCategory(item.category_id!)?.id,

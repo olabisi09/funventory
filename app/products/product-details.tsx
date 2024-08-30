@@ -18,8 +18,7 @@ export default function ProductDetails({
 }) {
   const totalCost =
     product.cost_price +
-    product.packaging_cost +
-    product.transportation_cost +
+    product.packaging_transportation_cost +
     (product.other_costs || 0);
   return (
     <DialogContent className="sm:max-w-[500px] max-h-[600px] overflow-y-auto">
